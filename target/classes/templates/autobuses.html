@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Autobuses</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primario: #B2DFDB;
+      --secundario: #CDB4DB;
+      --texto: #2A3D45;
+      --fondo: #ffffff;
+      --borde: #dddddd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--fondo);
+      font-family: 'Inter', sans-serif;
+      color: var(--texto);
+    }
+
+    header {
+      background-color: var(--primario);
+      padding: 1rem;
+      text-align: center;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-bottom: 5px solid var(--secundario);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: var(--fondo);
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--texto);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .buscar-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      padding: 0.8rem;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      font-size: 1rem;
+      flex: 1;
+    }
+
+    button {
+      background-color: var(--secundario);
+      color: white;
+      padding: 0.8rem 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #b89aca;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 2rem;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: var(--primario);
+      color: white;
+    }
+
+    td button {
+      margin: 0 5px;
+      font-size: 0.9rem;
+    }
+
+    .edit {
+      background-color: var(--primario);
+    }
+
+    .delete {
+      background-color: var(--secundario);
+    }
+
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        font-weight: bold;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>🚌 Gestión de Autobuses</header>
+
+  <div class="container">
+    <h2>Registrar / Editar Autobús</h2>
+
+    <!-- Formulario -->
+    <form id="formAutobus">
+
+      <div class="buscar-group">
+        <input type="text" id="buscarId" placeholder="Buscar por ID">
+        <button type="button" onclick="buscarPorId()" style="background-color: var(--primario);">🔍 Buscar</button>
+        <button type="button" onclick="limpiarFormulario()">➕ Nuevo Autobús</button>
+      </div>
+
+      <input type="hidden" id="id">
+      <input type="text" id="placa" placeholder="Placa (AA-NNNN)" pattern="[A-Z]{2}-\d{4}" required>
+      <input type="text" id="modelo" placeholder="Modelo" required>
+      <input type="number" id="capacidad" placeholder="Capacidad" required min="1">
+      <button type="submit" id="btnGuardar">Guardar Autobús</button>
+    </form>
+
+    <!-- Tabla -->
+    <h2>Listado de Autobuses</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Placa</th>
+          <th>Modelo</th>
+          <th>Capacidad</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaAutobuses"></tbody>
+    </table>
+  </div>
+
+  <!-- Script -->
+  <script>
+const API_URL = '/api/autobuses';
+
+    function cargarAutobuses() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          const tabla = document.getElementById('tablaAutobuses');
+          tabla.innerHTML = '';
+          data.forEach(a => {
+            tabla.innerHTML += `
+              <tr>
+                <td data-label="ID">${a.id}</td>
+                <td data-label="Placa">${a.placa}</td>
+                <td data-label="Modelo">${a.modelo}</td>
+                <td data-label="Capacidad">${a.capacidad}</td>
+                <td data-label="Acciones">
+                  <button class="edit" onclick='editarAutobus(${JSON.stringify(a)})'>✏️ Editar</button>
+                  <button class="delete" onclick='eliminarAutobus(${a.id})'>🗑️ Eliminar</button>
+                </td>
+              </tr>`;
+          });
+        });
+    }
+
+    function editarAutobus(a) {
+      document.getElementById('id').value = a.id;
+      document.getElementById('placa').value = a.placa;
+      document.getElementById('modelo').value = a.modelo;
+      document.getElementById('capacidad').value = a.capacidad;
+      document.getElementById('btnGuardar').textContent = "Actualizar Autobús";
+    }
+
+    function eliminarAutobus(id) {
+      if (confirm("¿Estás seguro de eliminar este autobús?")) {
+        fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+          .then(() => cargarAutobuses());
+      }
+    }
+
+    function buscarPorId() {
+      const id = document.getElementById('buscarId').value;
+      if (!id) return alert("Ingresa un ID válido.");
+
+      fetch(`${API_URL}/${id}`)
+        .then(res => {
+          if (!res.ok) throw new Error("No encontrado");
+          return res.json();
+        })
+        .then(a => {
+          editarAutobus(a);
+        })
+        .catch(() => {
+          alert("Autobús no encontrado.");
+        });
+    }
+
+    function limpiarFormulario() {
+      document.getElementById('formAutobus').reset();
+      document.getElementById('id').value = '';
+      document.getElementById('btnGuardar').textContent = "Guardar Autobús";
+    }
+
+    document.getElementById('formAutobus').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const id = document.getElementById('id').value.trim();
+      const placa = document.getElementById('placa').value;
+      const modelo = document.getElementById('modelo').value;
+      const capacidad = document.getElementById('capacidad').value;
+
+      const metodo = id ? 'PUT' : 'POST';
+      const url = id ? `${API_URL}/${id}` : API_URL;
+
+      fetch(url, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, placa, modelo, capacidad })
+      }).then(() => {
+        limpiarFormulario();
+        cargarAutobuses();
+      });
+    });
+
+    // Carga inicial
+    cargarAutobuses();
+  </script>
+
+</body>
+</html>

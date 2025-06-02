@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Viajes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primario: #B2DFDB;
+      --secundario: #CDB4DB;
+      --texto: #2A3D45;
+      --fondo: #ffffff;
+      --borde: #dddddd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--fondo);
+      font-family: 'Inter', sans-serif;
+      color: var(--texto);
+    }
+
+    header {
+      background-color: var(--primario);
+      padding: 1rem;
+      text-align: center;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-bottom: 5px solid var(--secundario);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: var(--fondo);
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--texto);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .buscar-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"] {
+      padding: 0.6rem;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      font-size: 1rem;
+      flex: 1;
+    }
+
+    input[disabled] {
+      background-color: #f4f4f4;
+    }
+
+    button {
+      background-color: var(--secundario);
+      color: white;
+      padding: 0.5rem 0.9rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #b89aca;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 2rem;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: var(--primario);
+      color: white;
+    }
+
+    td button {
+      margin: 0 3px;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .edit {
+      background-color: var(--primario);
+    }
+
+    .delete {
+      background-color: var(--secundario);
+    }
+
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        font-weight: bold;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>🧭 Gestión de Viajes</header>
+
+  <div class="container">
+    <h2>Registrar / Editar Viaje</h2>
+    <form id="formViaje">
+
+      <input type="hidden" id="id">
+
+      <input type="date" id="fecha" required>
+      <input type="time" id="hora" required>
+      <input type="text" id="origen" placeholder="Origen" required>
+      <input type="text" id="destino" placeholder="Destino" required>
+
+      <div class="buscar-group">
+        <input type="text" id="placaAutobus" placeholder="Buscar Placa Autobús" required>
+        <button type="button" onclick="buscarAutobus()">Buscar Autobús</button>
+      </div>
+      <input type="text" id="modeloAutobus" placeholder="Modelo del Autobús" disabled>
+
+      <div class="buscar-group">
+        <input type="text" id="codigoChofer" placeholder="Buscar Código Chofer" required>
+        <button type="button" onclick="buscarChofer()">Buscar Chofer</button>
+      </div>
+      <input type="text" id="nombreChofer" placeholder="Nombre del Chofer" disabled>
+
+      <button type="submit" id="btnGuardar">Guardar Viaje</button>
+    </form>
+
+    <h2>Listado de Viajes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Origen</th>
+          <th>Destino</th>
+          <th>Placa</th>
+          <th>Chofer</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaViajes"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_VIAJES = 'http://localhost:8080/api/viajes';
+    const API_AUTOBUSES = 'http://localhost:8080/api/autobuses';
+    const API_CHOFERES = 'http://localhost:8080/api/choferes';
+
+    let idAutobusSeleccionado = null;
+    let idChoferSeleccionado = null;
+
+    function cargarViajes() {
+      fetch(API_VIAJES)
+        .then(res => res.json())
+        .then(data => {
+          const tabla = document.getElementById('tablaViajes');
+          tabla.innerHTML = '';
+          data.forEach(v => {
+            tabla.innerHTML += `
+              <tr>
+                <td data-label="ID">${v.id}</td>
+                <td data-label="Fecha">${v.fecha}</td>
+                <td data-label="Hora">${v.hora}</td>
+                <td data-label="Origen">${v.origen}</td>
+                <td data-label="Destino">${v.destino}</td>
+                <td data-label="Placa">${v.autobus?.placa || ''}</td>
+                <td data-label="Chofer">${v.chofer?.nombre || ''}</td>
+                <td data-label="Acciones">
+                  <button class="edit" onclick='editarViaje(${JSON.stringify(v)})'>✏️</button>
+                  <button class="delete" onclick='eliminarViaje(${v.id})'>🗑️</button>
+                </td>
+              </tr>`;
+          });
+        });
+    }
+
+    function buscarAutobus() {
+  const placa = document.getElementById('placaAutobus').value.trim();
+  if (!placa) return alert("Ingresa la placa del autobús.");
+  
+  fetch(`${API_AUTOBUSES}/placa/${placa}`) // ✅ usa /placa/{placa}
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(a => {
+      idAutobusSeleccionado = a.id;
+      document.getElementById('modeloAutobus').value = a.modelo;
+    })
+    .catch(() => {
+      alert("Autobús no encontrado.");
+      document.getElementById('modeloAutobus').value = '';
+      idAutobusSeleccionado = null;
+    });
+}
+
+
+    function buscarChofer() {
+  const codigo = document.getElementById('codigoChofer').value.trim();
+  if (!codigo) return alert("Ingresa el código del chofer.");
+
+  fetch(`${API_CHOFERES}/codigo/${codigo}`) // ✅ usa /codigo/{codigo}
+    .then(res => {
+      if (!res.ok) throw new Error();
+      return res.json();
+    })
+    .then(c => {
+      idChoferSeleccionado = c.id;
+      document.getElementById('nombreChofer').value = c.nombre;
+    })
+    .catch(() => {
+      alert("Chofer no encontrado.");
+      document.getElementById('nombreChofer').value = '';
+      idChoferSeleccionado = null;
+    });
+}
+
+
+    function editarViaje(v) {
+      document.getElementById('id').value = v.id;
+      document.getElementById('fecha').value = v.fecha;
+      document.getElementById('hora').value = v.hora;
+      document.getElementById('origen').value = v.origen;
+      document.getElementById('destino').value = v.destino;
+      document.getElementById('placaAutobus').value = v.autobus?.placa || '';
+      document.getElementById('modeloAutobus').value = v.autobus?.modelo || '';
+      document.getElementById('codigoChofer').value = v.chofer?.codigo || '';
+      document.getElementById('nombreChofer').value = v.chofer?.nombre || '';
+      idAutobusSeleccionado = v.autobus?.id || null;
+      idChoferSeleccionado = v.chofer?.id || null;
+      document.getElementById('btnGuardar').textContent = "Actualizar Viaje";
+    }
+
+    function eliminarViaje(id) {
+      if (confirm("¿Estás seguro de eliminar este viaje?")) {
+        fetch(`${API_VIAJES}/${id}`, { method: 'DELETE' })
+          .then(() => cargarViajes());
+      }
+    }
+
+    document.getElementById('formViaje').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const id = document.getElementById('id').value;
+      const fecha = document.getElementById('fecha').value;
+      const hora = document.getElementById('hora').value;
+      const origen = document.getElementById('origen').value;
+      const destino = document.getElementById('destino').value;
+
+      if (!idAutobusSeleccionado || !idChoferSeleccionado) {
+        return alert("Debes buscar y seleccionar un autobús y un chofer válidos.");
+      }
+
+      const data = {
+        id: id || undefined,
+        fecha,
+        hora,
+        origen,
+        destino,
+        autobus: { id: idAutobusSeleccionado },
+        chofer: { id: idChoferSeleccionado }
+      };
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${API_VIAJES}/${id}` : API_VIAJES;
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(() => {
+        this.reset();
+        document.getElementById('modeloAutobus').value = '';
+        document.getElementById('nombreChofer').value = '';
+        idAutobusSeleccionado = null;
+        idChoferSeleccionado = null;
+        document.getElementById('btnGuardar').textContent = "Guardar Viaje";
+        cargarViajes();
+      });
+    });
+
+    cargarViajes();
+  </script>
+</body>
+</html>

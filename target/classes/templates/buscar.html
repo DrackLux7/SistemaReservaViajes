@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscar Viajes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primario: #B2DFDB;
+      --secundario: #CDB4DB;
+      --texto: #2A3D45;
+      --fondo: #ffffff;
+      --borde: #dddddd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--fondo);
+      font-family: 'Inter', sans-serif;
+      color: var(--texto);
+    }
+
+    header {
+      background-color: var(--primario);
+      padding: 1rem;
+      text-align: center;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-bottom: 5px solid var(--secundario);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: var(--fondo);
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    input[type="text"], input[type="date"] {
+      padding: 0.8rem;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      font-size: 1rem;
+      flex: 1 1 200px;
+    }
+
+    button {
+      background-color: var(--secundario);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #b89aca;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: var(--primario);
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f3f3f3;
+    }
+
+    @media (max-width: 600px) {
+      form {
+        flex-direction: column;
+      }
+
+      input, button {
+        width: 100%;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        font-weight: bold;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>🚌 Buscar Viajes</header>
+
+  <div class="container">
+    <h2>Filtrar Viajes Disponibles</h2>
+
+    <form id="filtroViajes">
+      <input type="text" id="origen" placeholder="Origen" />
+        <input type="text" id="destino" placeholder="Destino" />
+        <input type="date" id="fecha" />
+    
+      <button type="submit">🔍 Buscar</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Origen</th>
+          <th>Destino</th>
+        </tr>
+      </thead>
+      <tbody id="resultados"></tbody>
+    </table>
+  </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("Página cargada, solicitando viajes...");
+    cargarViajes();
+  });
+
+  document.getElementById("filtroViajes").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const origen = document.getElementById("origen").value.trim();
+    const destino = document.getElementById("destino").value.trim();
+    const fecha = document.getElementById("fecha").value;
+
+    const params = new URLSearchParams();
+    if (origen) params.append("origen", origen);
+    if (destino) params.append("destino", destino);
+    if (fecha) params.append("fecha", fecha);
+
+    try {
+      const res = await fetch(`/api/viajes/filtrar?${params.toString()}`);
+      if (!res.ok) throw new Error("Respuesta no válida del servidor");
+
+      const datos = await res.json();
+      console.log("Datos filtrados:", datos);
+      mostrarViajes(datos);
+    } catch (err) {
+      console.error("Error al buscar viajes:", err);
+      alert("Error al buscar viajes: " + err.message);
+    }
+  });
+
+  async function cargarViajes() {
+    try {
+      const res = await fetch("/api/viajes/dto");
+      const contentType = res.headers.get("Content-Type");
+
+      if (!res.ok || !contentType.includes("application/json")) {
+        throw new Error("Respuesta no válida o no es JSON.");
+      }
+
+      const datos = await res.json();
+      console.log("Datos cargados:", datos);
+      mostrarViajes(datos);
+    } catch (err) {
+      console.error("Error al cargar viajes:", err);
+      alert("Error al cargar viajes: " + err.message);
+    }
+  }
+
+  function mostrarViajes(viajes) {
+    const tbody = document.getElementById("resultados");
+    tbody.innerHTML = "";
+
+    if (!viajes || viajes.length === 0) {
+      const row = tbody.insertRow();
+      const cell = row.insertCell();
+      cell.colSpan = 4;
+      cell.textContent = "No hay viajes disponibles.";
+      return;
+    }
+
+    viajes.forEach((v) => {
+      const row = tbody.insertRow();
+      row.insertCell().textContent = v.fecha;
+      row.insertCell().textContent = v.hora;
+      row.insertCell().textContent = v.origen;
+      row.insertCell().textContent = v.destino;
+    });
+  }
+</script>
+
+
+</body>
+</html>

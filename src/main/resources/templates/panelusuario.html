@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel de Usuario</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    :root {
+      --verde-pastel: #B2DFDB;
+      --lila-pastel: #E1BEE7;
+      --verde-acento: #00796B;
+      --fondo: #FFFFFF;
+      --gris-claro: #F5F5F5;
+      --texto: #333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--gris-claro);
+      color: var(--texto);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    aside {
+      width: 250px;
+      background-color: var(--verde-pastel);
+      padding-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    }
+
+    .sidebar-logo {
+      font-size: 1.4em;
+      font-weight: bold;
+      text-align: center;
+      color: var(--verde-acento);
+      margin-bottom: 40px;
+    }
+
+    .nav-button {
+      padding: 16px 24px;
+      background-color: transparent;
+      border: none;
+      text-align: left;
+      font-size: 1em;
+      color: var(--texto);
+      font-weight: 500;
+      cursor: pointer;
+      border-left: 5px solid transparent;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .nav-button:hover {
+      background-color: var(--lila-pastel);
+      color: white;
+      border-left: 5px solid var(--verde-acento);
+    }
+
+    .nav-button i {
+      margin-right: 10px;
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      padding: 40px;
+      background-color: var(--fondo);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: var(--verde-acento);
+      color: white;
+      padding: 20px 32px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    header .logo {
+      font-size: 1.3em;
+      font-weight: bold;
+    }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    h2 {
+      color: var(--verde-acento);
+      margin-bottom: 16px;
+    }
+
+    .datos-usuario {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .dato {
+      background-color: var(--gris-claro);
+      padding: 16px;
+      border-radius: 10px;
+      border-left: 5px solid var(--lila-pastel);
+    }
+
+    .dato strong {
+      color: var(--verde-acento);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      aside {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 10px 0;
+      }
+
+      .nav-button {
+        border-left: none;
+        border-bottom: 4px solid transparent;
+        text-align: center;
+      }
+
+      .nav-button:hover {
+        border-left: none;
+        border-bottom: 4px solid var(--verde-acento);
+      }
+
+      main {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+ <aside>
+    <div class="sidebar-logo"><i class="fas fa-user-circle"></i> Usuario</div>
+    <a th:href="@{/buscar}" class="nav-button"><i class="fas fa-bus"></i> Viajes</a>
+    <a th:href="@{/reservas}" class="nav-button"><i class="fas fa-calendar-check"></i> Mis Reservas</a>
+    <a th:href="@{/reservascanceladas}" class="nav-button"><i class="fas fa-ban"></i> Cancelar Reserva</a>
+  </aside>
+
+  <!-- Main Content -->
+  <main>
+    <header>
+      <div class="logo">Panel de Usuario</div>
+      <a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+    </header>
+
+    <h2 th:text="'Bienvenido, ' + ${usuario.nombre}">Bienvenido, Juan</h2>
+    <p>A continuación se muestran tus datos personales:</p>
+
+    <div class="datos-usuario">
+      <div class="dato">
+        <strong>Nombre:</strong>
+        <span th:text="${usuario.nombre}">Juan</span>
+      </div>
+      <div class="dato">
+        <strong>Apellidos:</strong>
+        <span th:text="${usuario.apellidos}">Pérez García</span>
+      </div>
+      <div class="dato">
+        <strong>Teléfono:</strong>
+        <span th:text="${usuario.telefono}">+51 987654321</span>
+      </div>
+      <div class="dato">
+        <strong>Correo:</strong>
+        <span th:text="${usuario.inicioSesion.email}">correo@ejemplo.com</span>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

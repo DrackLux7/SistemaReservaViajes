@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Administrador</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8fcfa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background-color: #d0f2e8;
+      color: #2e3b3c;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #cce7df;
+    }
+
+    .logo {
+      font-size: 1.5em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 230px;
+      background-color: #effff6;
+      padding: 30px 20px;
+      border-right: 1px solid #e0f0e8;
+    }
+
+    .sidebar a {
+      display: block;
+      color: #4a4a4a;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: #e0f7ec;
+      color: #00695c;
+    }
+
+    .sidebar a i {
+      margin-right: 8px;
+      color: #81c784;
+    }
+
+    main {
+      flex: 1;
+      padding: 40px;
+      background-color: #ffffff;
+      overflow-y: auto;
+    }
+
+    h2 {
+      font-size: 1.6em;
+      color: #388e3c;
+      margin-bottom: 25px;
+    }
+
+    .datos-personales {
+      background-color: #f3e5f5;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.04);
+    }
+
+    .datos-personales h3 {
+      color: #7b1fa2;
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+
+    .datos-personales p {
+      margin: 6px 0;
+      font-size: 0.95em;
+      color: #4a4a4a;
+    }
+
+    .opciones {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
+
+    .opcion {
+      background-color: #f9fdfb;
+      border: 1px solid #e0f0e8;
+      border-left: 5px solid #a5d6a7;
+      padding: 18px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .opcion:hover {
+      background-color: #e8f5e9;
+      transform: translateY(-2px);
+    }
+
+    .opcion i {
+      font-size: 1.5em;
+      color: #43a047;
+    }
+
+    nav a {
+      color: #2e3b3c;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: #00695c;
+    }
+   </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <i class="fas fa-user-cog"></i> Administrador
+  </div>
+  <nav>
+    <a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- Panel lateral -->
+  <aside class="sidebar">
+    <a th:href="@{/choferes}"><i class="fas fa-id-badge"></i> Registrar Chofer</a>
+    <a th:href="@{/autobuses}"><i class="fas fa-van-shuttle"></i> Registrar Autobús</a>
+    <a th:href="@{/registroviaje}"><i class="fas fa-map-marked-alt"></i> Registrar Viaje</a>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main>
+    <h2>Panel de Gestión</h2>
+
+    <div class="datos-personales">
+      <h3><i class="fas fa-user"></i> Datos Personales</h3>
+      <p><strong>Nombre:</strong> <span th:text="${admin.nombre}">Nombre</span> <span th:text="${admin.apellidos}">Apellidos</span></p>
+      <p th:if="${admin.inicioSesion != null}">
+        <strong>Correo:</strong> <span th:text="${admin.inicioSesion.email}">correo@ejemplo.com</span>
+      </p>
+      <p><strong>Rol:</strong> Administrador</p>
+    </div>
+
+    <div class="opciones">
+      <a class="opcion" th:href="@{/choferes}">
+        <i class="fas fa-id-badge"></i> Registrar Chofer
+      </a>
+      <a class="opcion" th:href="@{/autobuses}">
+        <i class="fas fa-van-shuttle"></i> Registrar Autobús
+      </a>
+      <a class="opcion" th:href="@{/registroviaje}">
+        <i class="fas fa-map-marked-alt"></i> Registrar Viaje
+      </a>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión | Sistema de Viajes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #FDFEFE;
+            color: #263238;
+        }
+        header {
+            background-color: #B2DFDB;
+            color: #263238;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 16px;
+            margin: 0;
+            padding: 0;
+        }
+        nav a {
+            color: #263238;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: #ffffff;
+        }
+        form {
+            max-width: 400px;
+            margin: auto;
+            background-color: #E1F5FE;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .input-group i {
+            margin-right: 10px;
+            color: #80CBC4;
+        }
+        .input-group input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1em;
+        }
+        .btn {
+            background-color: #B2DFDB;
+            color: #263238;
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background-color: #80CBC4;
+        }
+        .btn-secundario {
+            display: inline-block;
+            margin-top: 12px;
+            background-color: #E1BEE7;
+            color: #4A148C;
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .btn-secundario:hover {
+            background-color: #CE93D8;
+        }
+        .registro-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .mensaje {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .mensaje.error {
+            color: red;
+        }
+        .mensaje.logout {
+            color: green;
+        }
+        footer {
+            background-color: #B2DFDB;
+            color: #263238;
+            text-align: center;
+            padding: 12px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo"><i class="fas fa-bus"></i> MiEmpresa Viajes</div>
+    <nav>
+        <ul>
+            <li><a th:href="@{/index}">Inicio</a></li>
+            <li><a th:href="@{/registro}">Registrarse</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="hero">
+    <h1><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h1>
+    <form th:action="@{/login}" method="post">
+        <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="text" name="username" placeholder="Correo electrónico" required />
+        </div>
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" placeholder="Contraseña" required />
+        </div>
+        <button class="btn" type="submit">Entrar</button>
+
+        <div class="mensaje error" th:if="${param.error}">
+            <i class="fas fa-exclamation-circle"></i> Email o contraseña incorrectos
+        </div>
+        <div class="mensaje logout" th:if="${param.logout}">
+            <i class="fas fa-check-circle"></i> Sesión cerrada correctamente
+        </div>
+
+        <div class="registro-link">
+            <p>¿No tienes una cuenta?
+                <a th:href="@{/registro}" class="btn-secundario">
+                    <i class="fas fa-user-plus"></i> Registrarse
+                </a>
+            </p>
+        </div>
+    </form>
+</div>
+
+<footer>
+    &copy; 2025 MiEmpresa. Todos los derechos reservados.
+</footer>
+
+</body>
+</html>

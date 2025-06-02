@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reservar Viajes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primario: #B2DFDB;
+      --secundario: #CDB4DB;
+      --texto: #2A3D45;
+      --fondo: #ffffff;
+      --borde: #dddddd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--fondo);
+      color: var(--texto);
+    }
+    header {
+      background-color: var(--primario);
+      padding: 1rem;
+      text-align: center;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-bottom: 5px solid var(--secundario);
+    }
+    .container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: var(--fondo);
+      border-radius: 16px;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+    }
+    h2 {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+    }
+    input, select {
+      flex: 1 1 30%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+    button {
+      background-color: var(--secundario);
+      color: white;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #b89aca; }
+    table {
+      width: 100%;
+      margin-top: 1.5rem;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background-color: var(--primario);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>🚌 Reservar Viajes</header>
+  <div class="container">
+    <h2>Filtrar Viajes Disponibles</h2>
+    <form onsubmit="filtrarViajes(event)">
+      <input type="text" id="origen" placeholder="Origen" required />
+      <input type="text" id="destino" placeholder="Destino" required />
+      <input type="date" id="fecha" required />
+      <button type="submit">🔍 Buscar</button>
+    </form>
+
+    <h2>📋 Resultados</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Origen</th>
+          <th>Destino</th>
+          <th>Pasajes</th>
+          <th>Reservar</th>
+        </tr>
+      </thead>
+      <tbody id="tablaResultados"></tbody>
+    </table>
+
+    <h2>🕒 Reservas Pendientes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Origen</th>
+          <th>Destino</th>
+          <th>Pasajes</th>
+          <th>Confirmar</th>
+          <th>Eliminar</th>
+        </tr>
+      </thead>
+      <tbody id="tablaPendientes"></tbody>
+    </table>
+
+    <h2>📝 Reservas Confirmadas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Origen</th>
+          <th>Destino</th>
+          <th>Pasajes</th>
+          <th>Estado</th>
+          <th>Cancelar</th>
+        </tr>
+      </thead>
+      <tbody id="tablaReservas"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_VIAJES = '/api/viajes/filtrar';
+    const API_RESERVAS = '/api/reservas';
+
+    let reservasPendientes = [];
+
+    function filtrarViajes(e) {
+      e.preventDefault();
+      const o = document.getElementById('origen').value.trim();
+      const d = document.getElementById('destino').value.trim();
+      const f = document.getElementById('fecha').value;
+
+      fetch(`${API_VIAJES}?origen=${encodeURIComponent(o)}&destino=${encodeURIComponent(d)}&fecha=${encodeURIComponent(f)}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Error al cargar viajes');
+          return res.json();
+        })
+        .then(data => {
+          const tbody = document.getElementById('tablaResultados');
+          tbody.innerHTML = '';
+          if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No se encontraron viajes.</td></tr>';
+            return;
+          }
+          data.forEach(v => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${v.fecha}</td>
+                <td>${v.hora}</td>
+                <td>${v.origen}</td>
+                <td>${v.destino}</td>
+                <td><input type="number" min="1" value="1" id="pasajes-${v.id}" style="width: 60px;" /></td>
+                <td><button onclick='agregarPendiente(${JSON.stringify(v).replace(/"/g, '&quot;')})'>➕</button></td>
+              </tr>`;
+          });
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function agregarPendiente(viaje) {
+      const input = document.getElementById(`pasajes-${viaje.id}`);
+      const cantidad = input ? parseInt(input.value) : 0;
+      if (!cantidad || cantidad <= 0) return alert("Ingrese una cantidad válida.");
+
+      // Verificar que no exista la reserva pendiente para ese viaje
+      const existente = reservasPendientes.find(r => r.viaje.id === viaje.id);
+      if (existente) {
+        existente.cantidadPasajes += cantidad;
+      } else {
+        reservasPendientes.push({ viaje, cantidadPasajes: cantidad });
+      }
+      mostrarPendientes();
+    }
+
+    function mostrarPendientes() {
+      const tbody = document.getElementById('tablaPendientes');
+      tbody.innerHTML = '';
+      if (reservasPendientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">No hay reservas pendientes.</td></tr>';
+        return;
+      }
+      reservasPendientes.forEach((r, i) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${r.viaje.fecha}</td>
+            <td>${r.viaje.hora}</td>
+            <td>${r.viaje.origen}</td>
+            <td>${r.viaje.destino}</td>
+            <td>${r.cantidadPasajes}</td>
+            <td><button onclick="confirmarReserva(${i})">✅</button></td>
+            <td><button onclick="eliminarPendiente(${i})">❌</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function eliminarPendiente(index) {
+      reservasPendientes.splice(index, 1);
+      mostrarPendientes();
+    }
+
+function confirmarReserva(index) {
+  const r = reservasPendientes[index];
+  const data = {
+    viaje: { id: r.viaje.id },
+    cantidadPasajes: r.cantidadPasajes
+  };
+
+  fetch(API_RESERVAS, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => {
+        const msg = err.message || 'Error al confirmar reserva';
+        if (msg.toLowerCase().includes('asientos')) {
+          alert("🚫 No hay suficientes asientos disponibles para este viaje.");
+        } else {
+          alert("❌ " + msg);
+        }
+        throw new Error(msg);
+      });
+    }
+    return res.json();
+  })
+  .then(() => {
+    alert("✅ Reserva confirmada.");
+    reservasPendientes.splice(index, 1);
+    mostrarPendientes();
+    cargarReservas();
+  })
+  .catch(err => console.error("❌ Error:", err));
+}
+
+    function cargarReservas() {
+      fetch(`${API_RESERVAS}/mias`, {
+        credentials: 'include'
+      })
+
+        .then(res => {
+          if (!res.ok) throw new Error('Error al cargar reservas');
+          return res.json();
+        })
+        .then(data => {
+          const tbody = document.getElementById('tablaReservas');
+          tbody.innerHTML = '';
+          if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7">No hay reservas confirmadas.</td></tr>';
+            return;
+          }
+          data.forEach(r => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${r.viaje.fecha}</td>
+                <td>${r.viaje.hora}</td>
+                <td>${r.viaje.origen}</td>
+                <td>${r.viaje.destino}</td>
+                <td>${r.cantidadPasajes}</td>
+                <td>${r.estado.toUpperCase()}</td>
+                <td>
+                  ${r.estado.toLowerCase() === 'activa' ? `<button onclick="cancelarReserva(${r.id})">❌ Cancelar</button>` : ''}
+                </td>
+              </tr>`;
+          });
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function cancelarReserva(idReserva) {
+      if (!confirm("¿Seguro que quieres cancelar esta reserva? Sólo es posible dentro de las primeras 24 horas.")) return;
+
+      fetch(`${API_RESERVAS}/${idReserva}/cancelar`, {
+        method: 'POST',
+      })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => { throw new Error(err.message || 'Error al cancelar reserva'); });
+        }
+        return res.json();
+      })
+      .then(() => {
+        alert("Reserva cancelada correctamente.");
+        cargarReservas();
+      })
+      .catch(err => alert("❌ " + err.message));
+    }
+
+    // Cargar reservas confirmadas al iniciar
+    cargarReservas();
+  </script>
+</body>
+</html>
+
